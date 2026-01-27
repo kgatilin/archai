@@ -1,0 +1,325 @@
+# domain package
+
+# Legend
+legend: {
+  label: "Color Legend (DDD)"
+  style.stroke: "#999"
+  style.fill: "#fafafa"
+  near: top-right
+
+  aggregate: {
+    label: "Domain Model"
+    shape: class
+    style.fill: "#e8f4fc"
+    style.font-color: "#000"
+  }
+  service: {
+    label: "Service"
+    shape: class
+    style.fill: "#f0e8fc"
+    style.font-color: "#000"
+  }
+  factory: {
+    label: "Factory"
+    shape: class
+    style.fill: "#e8fce8"
+    style.font-color: "#000"
+  }
+  options: {
+    label: "Value Object"
+    shape: class
+    style.fill: "#f8f8f8"
+    style.font-color: "#000"
+  }
+}
+
+# Files
+dependency: {
+  label: "dependency.go"
+  style.fill: "#e8f4fc"
+
+  Dependency: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+From internal/domain.SymbolRef": ""
+    "+To internal/domain.SymbolRef": ""
+    "+Kind internal/domain.DependencyKind": ""
+
+    "+String()": "string"
+  }
+
+  SymbolRef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Package string": ""
+    "+File string": ""
+    "+Symbol string": ""
+    "+External bool": ""
+
+    "+String()": "string"
+    "+QualifiedName()": "string"
+  }
+
+  DependencyKind: {
+    shape: class
+    stereotype: "<<enum>>"
+
+    "type": "string"
+
+    "DependencyImplements": "const"
+    "DependencyReturns": "const"
+    "DependencyUses": "const"
+  }
+
+}
+
+field: {
+  label: "field.go"
+  style.fill: "#e8f4fc"
+
+  FieldDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Type internal/domain.TypeRef": ""
+    "+IsExported bool": ""
+    "+Tag string": ""
+
+    "+String()": "string"
+    "+StringWithVisibility()": "string"
+  }
+
+}
+
+function: {
+  label: "function.go"
+  style.fill: "#e8f4fc"
+
+  FunctionDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Params []internal/domain.ParamDef": ""
+    "+Returns []internal/domain.TypeRef": ""
+    "+IsExported bool": ""
+    "+SourceFile string": ""
+    "+Doc string": ""
+    "+Stereotype internal/domain.Stereotype": ""
+
+    "+Signature()": "string"
+    "+SignatureWithVisibility()": "string"
+  }
+
+}
+
+interface: {
+  label: "interface.go"
+  style.fill: "#e8f4fc"
+
+  InterfaceDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Methods []internal/domain.MethodDef": ""
+    "+IsExported bool": ""
+    "+SourceFile string": ""
+    "+Doc string": ""
+    "+Stereotype internal/domain.Stereotype": ""
+  }
+
+}
+
+method: {
+  label: "method.go"
+  style.fill: "#e8f4fc"
+
+  MethodDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Params []internal/domain.ParamDef": ""
+    "+Returns []internal/domain.TypeRef": ""
+    "+IsExported bool": ""
+
+    "+Signature()": "string"
+    "+SignatureWithVisibility()": "string"
+  }
+
+  ParamDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Type internal/domain.TypeRef": ""
+
+    "+String()": "string"
+  }
+
+  TypeRef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Package string": ""
+    "+IsPointer bool": ""
+    "+IsSlice bool": ""
+    "+IsMap bool": ""
+    "+KeyType *internal/domain.TypeRef": ""
+    "+ValueType *internal/domain.TypeRef": ""
+
+    "+String()": "string"
+  }
+
+}
+
+module: {
+  label: "module.go"
+  style.fill: "#e8f4fc"
+
+  Module: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Path string": ""
+    "+Packages []internal/domain.PackageModel": ""
+
+    "+FindPackage(path string)": "*internal/domain.PackageModel"
+    "+PackageCount()": "int"
+  }
+
+}
+
+package: {
+  label: "package.go"
+  style.fill: "#e8f4fc"
+
+  PackageModel: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Path string": ""
+    "+Name string": ""
+    "+Interfaces []internal/domain.InterfaceDef": ""
+    "+Structs []internal/domain.StructDef": ""
+    "+Functions []internal/domain.FunctionDef": ""
+    "+TypeDefs []internal/domain.TypeDef": ""
+    "+Dependencies []internal/domain.Dependency": ""
+
+    "+SourceFiles()": "[]string"
+    "+ExportedInterfaces()": "[]internal/domain.InterfaceDef"
+    "+ExportedStructs()": "[]internal/domain.StructDef"
+    "+ExportedFunctions()": "[]internal/domain.FunctionDef"
+    "+ExportedTypeDefs()": "[]internal/domain.TypeDef"
+    "+HasExportedSymbols()": "bool"
+  }
+
+}
+
+stereotype: {
+  label: "stereotype.go"
+  style.fill: "#f8f8f8"
+
+  Stereotype: {
+    shape: class
+    stereotype: "<<enum>>"
+
+    "type": "string"
+
+    "StereotypeAggregate": "const"
+    "StereotypeEntity": "const"
+    "StereotypeEnum": "const"
+    "StereotypeFactory": "const"
+    "StereotypeInterface": "const"
+    "StereotypeNone": "const"
+    "StereotypePort": "const"
+    "StereotypeRepository": "const"
+    "StereotypeService": "const"
+    "StereotypeValue": "const"
+  }
+
+}
+
+struct: {
+  label: "struct.go"
+  style.fill: "#e8f4fc"
+
+  StructDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Fields []internal/domain.FieldDef": ""
+    "+Methods []internal/domain.MethodDef": ""
+    "+IsExported bool": ""
+    "+SourceFile string": ""
+    "+Doc string": ""
+    "+Stereotype internal/domain.Stereotype": ""
+  }
+
+}
+
+typedef: {
+  label: "typedef.go"
+  style.fill: "#e8f4fc"
+
+  TypeDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+UnderlyingType internal/domain.TypeRef": ""
+    "+Constants []string": ""
+    "+IsExported bool": ""
+    "+SourceFile string": ""
+    "+Doc string": ""
+    "+Stereotype internal/domain.Stereotype": ""
+
+    "+IsEnum()": "bool"
+  }
+
+}
+
+write_options: {
+  label: "write_options.go"
+  style.fill: "#f8f8f8"
+
+  WriteOptions: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+OutputPath string": ""
+    "+PublicOnly bool": ""
+    "+ToStdout bool": ""
+  }
+
+}
+
+# Dependencies
+dependency.Dependency -> dependency.SymbolRef: "uses"
+dependency.Dependency -> dependency.DependencyKind: "uses"
+field.FieldDef -> method.TypeRef: "uses"
+function.FunctionDef -> method.ParamDef: "uses"
+function.FunctionDef -> method.TypeRef: "uses"
+function.FunctionDef -> stereotype.Stereotype: "uses"
+interface.InterfaceDef -> method.MethodDef: "uses"
+interface.InterfaceDef -> stereotype.Stereotype: "uses"
+method.MethodDef -> method.ParamDef: "uses"
+method.MethodDef -> method.TypeRef: "uses"
+module.Module -> package.PackageModel: "uses"
+package.PackageModel -> interface.InterfaceDef: "uses"
+package.PackageModel -> struct.StructDef: "uses"
+package.PackageModel -> function.FunctionDef: "uses"
+package.PackageModel -> typedef.TypeDef: "uses"
+package.PackageModel -> dependency.Dependency: "uses"
+method.ParamDef -> method.TypeRef: "uses"
+struct.StructDef -> field.FieldDef: "uses"
+struct.StructDef -> method.MethodDef: "uses"
+struct.StructDef -> stereotype.Stereotype: "uses"
+typedef.TypeDef -> method.TypeRef: "uses"
+typedef.TypeDef -> stereotype.Stereotype: "uses"

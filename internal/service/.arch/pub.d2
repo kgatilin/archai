@@ -1,0 +1,119 @@
+# service package
+
+# Legend
+legend: {
+  label: "Color Legend (DDD)"
+  style.stroke: "#999"
+  style.fill: "#fafafa"
+  near: top-right
+
+  aggregate: {
+    label: "Domain Model"
+    shape: class
+    style.fill: "#e8f4fc"
+    style.font-color: "#000"
+  }
+  service: {
+    label: "Service"
+    shape: class
+    style.fill: "#f0e8fc"
+    style.font-color: "#000"
+  }
+  factory: {
+    label: "Factory"
+    shape: class
+    style.fill: "#e8fce8"
+    style.font-color: "#000"
+  }
+  options: {
+    label: "Value Object"
+    shape: class
+    style.fill: "#f8f8f8"
+    style.font-color: "#000"
+  }
+}
+
+# Files
+factory: {
+  label: "factory.go"
+  style.fill: "#e8fce8"
+
+  NewService: {
+    shape: class
+    stereotype: "<<factory>>"
+
+    "goReader": "internal/service.ModelReader"
+    "d2Writer": "internal/service.ModelWriter"
+    "return": "*internal/service.Service"
+  }
+
+
+}
+
+generate: {
+  label: "generate.go"
+  style.fill: "#f8f8f8"
+
+  GenerateOptions: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Paths []string": ""
+    "+OutputFile string": ""
+    "+PublicOnly bool": ""
+    "+InternalOnly bool": ""
+  }
+
+  GenerateResult: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+PackagePath string": ""
+    "+PubFile string": ""
+    "+InternalFile string": ""
+    "+Error error": ""
+  }
+
+}
+
+options: {
+  label: "options.go"
+  style.fill: "#f0e8fc"
+
+  ModelReader: {
+    shape: class
+    stereotype: "<<interface>>"
+
+    "+Read(ctx context.Context, paths []string)": "([]internal/domain.PackageModel, error)"
+  }
+
+  ModelWriter: {
+    shape: class
+    stereotype: "<<interface>>"
+
+    "+Write(ctx context.Context, model internal/domain.PackageModel, opts internal/domain.WriteOptions)": "error"
+  }
+
+}
+
+service: {
+  label: "service.go"
+  style.fill: "#f8f8f8"
+
+  Service: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Generate(ctx context.Context, opts internal/service.GenerateOptions)": "([]internal/service.GenerateResult, error)"
+  }
+
+}
+
+# Dependencies
+service.Service -> options.ModelReader: "uses"
+service.Service -> options.ModelWriter: "uses"
+service.Service -> generate.GenerateOptions: "uses"
+service.Service -> generate.GenerateResult: "returns"
+factory.NewService -> options.ModelReader: "uses"
+factory.NewService -> options.ModelWriter: "uses"
+factory.NewService -> service.Service: "returns"

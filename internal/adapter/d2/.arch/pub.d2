@@ -1,0 +1,112 @@
+# d2 package
+
+# Legend
+legend: {
+  label: "Color Legend (DDD)"
+  style.stroke: "#999"
+  style.fill: "#fafafa"
+  near: top-right
+
+  aggregate: {
+    label: "Domain Model"
+    shape: class
+    style.fill: "#e8f4fc"
+    style.font-color: "#000"
+  }
+  service: {
+    label: "Service"
+    shape: class
+    style.fill: "#f0e8fc"
+    style.font-color: "#000"
+  }
+  factory: {
+    label: "Factory"
+    shape: class
+    style.fill: "#e8fce8"
+    style.font-color: "#000"
+  }
+  options: {
+    label: "Value Object"
+    shape: class
+    style.fill: "#f8f8f8"
+    style.font-color: "#000"
+  }
+}
+
+# Files
+reader: {
+  label: "reader.go"
+  style.fill: "#f8f8f8"
+
+  Reader: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Read(ctx context.Context, paths []string)": "([]internal/domain.PackageModel, error)"
+  }
+
+  NewReader: {
+    shape: class
+    stereotype: "<<factory>>"
+
+    "return": "*internal/adapter/d2.Reader"
+  }
+
+
+}
+
+styles: {
+  label: "styles.go"
+  style.fill: "#f8f8f8"
+
+  FileContainerColor: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "symbols": "[]internal/adapter/d2.symbolInfo"
+    "return": "string"
+  }
+
+  StereotypeColor: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "s": "internal/domain.Stereotype"
+    "return": "string"
+  }
+
+  StereotypeLabel: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "s": "internal/domain.Stereotype"
+    "return": "string"
+  }
+
+
+}
+
+writer: {
+  label: "writer.go"
+  style.fill: "#f8f8f8"
+
+  Writer: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Write(ctx context.Context, model internal/domain.PackageModel, opts internal/domain.WriteOptions)": "error"
+  }
+
+  NewWriter: {
+    shape: class
+    stereotype: "<<factory>>"
+
+    "return": "*internal/adapter/d2.Writer"
+  }
+
+
+}
+
+# Dependencies
+reader.NewReader -> reader.Reader: "returns"
+writer.NewWriter -> writer.Writer: "returns"

@@ -1,0 +1,155 @@
+# golang package
+
+# Legend
+legend: {
+  label: "Color Legend (DDD)"
+  style.stroke: "#999"
+  style.fill: "#fafafa"
+  near: top-right
+
+  aggregate: {
+    label: "Domain Model"
+    shape: class
+    style.fill: "#e8f4fc"
+    style.font-color: "#000"
+  }
+  service: {
+    label: "Service"
+    shape: class
+    style.fill: "#f0e8fc"
+    style.font-color: "#000"
+  }
+  factory: {
+    label: "Factory"
+    shape: class
+    style.fill: "#e8fce8"
+    style.font-color: "#000"
+  }
+  options: {
+    label: "Value Object"
+    shape: class
+    style.fill: "#f8f8f8"
+    style.font-color: "#000"
+  }
+}
+
+# Files
+reader: {
+  label: "reader.go"
+  style.fill: "#f8f8f8"
+
+  Reader: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "-modulePath string": ""
+
+    "+Read(ctx context.Context, paths []string)": "([]internal/domain.PackageModel, error)"
+    "-convertPackage(pkg *golang.org/x/tools/go/packages.Package)": "(internal/domain.PackageModel, error)"
+    "-relativePath(pkgPath string)": "string"
+    "-collectMethodsByReceiver(pkg *golang.org/x/tools/go/packages.Package)": "map[string][]internal/domain.MethodDef"
+    "-collectConstantsByType(pkg *golang.org/x/tools/go/packages.Package)": "map[string][]string"
+    "-extractInterfaces(pkg *golang.org/x/tools/go/packages.Package, astFiles map[string]*go/ast.File)": "[]internal/domain.InterfaceDef"
+    "-extractInterfaceMethods(iface *go/types.Interface)": "[]internal/domain.MethodDef"
+    "-extractStructs(pkg *golang.org/x/tools/go/packages.Package, astFiles map[string]*go/ast.File, methodsByReceiver map[string][]internal/domain.MethodDef)": "[]internal/domain.StructDef"
+    "-extractStructFields(structType *go/types.Struct)": "[]internal/domain.FieldDef"
+    "-extractFunctions(pkg *golang.org/x/tools/go/packages.Package, astFiles map[string]*go/ast.File)": "[]internal/domain.FunctionDef"
+    "-extractTypeDefs(pkg *golang.org/x/tools/go/packages.Package, astFiles map[string]*go/ast.File, constantsByType map[string][]string)": "[]internal/domain.TypeDef"
+    "-convertMethod(fn *go/types.Func, sig *go/types.Signature)": "internal/domain.MethodDef"
+    "-extractParams(tuple *go/types.Tuple)": "[]internal/domain.ParamDef"
+    "-extractReturns(tuple *go/types.Tuple)": "[]internal/domain.TypeRef"
+    "-convertTypeRef(t go/types.Type)": "internal/domain.TypeRef"
+    "-getSourceFile(fset *go/token.FileSet, pos go/token.Pos)": "string"
+    "-getDocComment(astFiles map[string]*go/ast.File, filename string, name string)": "string"
+    "-collectDependencies(pkg *golang.org/x/tools/go/packages.Package, model *internal/domain.PackageModel)": "[]internal/domain.Dependency"
+    "-collectMethodDependencies(fromRef internal/domain.SymbolRef, method internal/domain.MethodDef, pkg *golang.org/x/tools/go/packages.Package, addDep func(github.com/kgatilin/archai/internal/domain.Dependency))": ""
+    "-typeRefToSymbolRef(ref internal/domain.TypeRef, pkg *golang.org/x/tools/go/packages.Package)": "*internal/domain.SymbolRef"
+    "-findSymbolFile(pkg *golang.org/x/tools/go/packages.Package, symbolName string)": "string"
+    "-applyStereotypes(model *internal/domain.PackageModel)": ""
+  }
+
+  NewReader: {
+    shape: class
+    stereotype: "<<factory>>"
+
+    "return": "*internal/adapter/golang.Reader"
+  }
+
+  isBasicType: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "name": "string"
+    "return": "bool"
+  }
+
+  isExported: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "name": "string"
+    "return": "bool"
+  }
+
+
+}
+
+stereotype: {
+  label: "stereotype.go"
+  style.fill: "#f8f8f8"
+
+  detectFunctionStereotype: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "fn": "internal/domain.FunctionDef"
+    "return": "internal/domain.Stereotype"
+  }
+
+  detectInterfaceStereotype: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "iface": "internal/domain.InterfaceDef"
+    "pkgPath": "string"
+    "return": "internal/domain.Stereotype"
+  }
+
+  detectStructStereotype: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "s": "internal/domain.StructDef"
+    "pkgPath": "string"
+    "return": "internal/domain.Stereotype"
+  }
+
+  detectTypeDefStereotype: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "td": "internal/domain.TypeDef"
+    "return": "internal/domain.Stereotype"
+  }
+
+  isDomainPath: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "pkgPath": "string"
+    "return": "bool"
+  }
+
+  parseAnnotation: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "doc": "string"
+    "return": "internal/domain.Stereotype"
+  }
+
+
+}
+
+# Dependencies
+reader.NewReader -> reader.Reader: "returns"

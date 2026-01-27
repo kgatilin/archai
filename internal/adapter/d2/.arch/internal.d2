@@ -1,0 +1,192 @@
+# d2 package
+
+# Legend
+legend: {
+  label: "Color Legend (DDD)"
+  style.stroke: "#999"
+  style.fill: "#fafafa"
+  near: top-right
+
+  aggregate: {
+    label: "Domain Model"
+    shape: class
+    style.fill: "#e8f4fc"
+    style.font-color: "#000"
+  }
+  service: {
+    label: "Service"
+    shape: class
+    style.fill: "#f0e8fc"
+    style.font-color: "#000"
+  }
+  factory: {
+    label: "Factory"
+    shape: class
+    style.fill: "#e8fce8"
+    style.font-color: "#000"
+  }
+  options: {
+    label: "Value Object"
+    shape: class
+    style.fill: "#f8f8f8"
+    style.font-color: "#000"
+  }
+}
+
+# Files
+builder: {
+  label: "builder.go"
+  style.fill: "#f8f8f8"
+
+  d2TextBuilder: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "-buf strings.Builder": ""
+    "-indent int": ""
+
+    "+Build(pkg internal/domain.PackageModel, publicOnly bool)": "string"
+    "-groupByFile(pkg internal/domain.PackageModel, publicOnly bool)": "[]internal/adapter/d2.fileGroup"
+    "-writeFileContainer(fg internal/adapter/d2.fileGroup, publicOnly bool)": ""
+    "-collectSymbolInfo(fg internal/adapter/d2.fileGroup)": "[]internal/adapter/d2.symbolInfo"
+    "-fileContainerID(filename string)": "string"
+    "-writeInterface(iface internal/domain.InterfaceDef, publicOnly bool)": ""
+    "-writeStruct(s internal/domain.StructDef, publicOnly bool)": ""
+    "-writeFunctions(functions []internal/domain.FunctionDef, publicOnly bool)": ""
+    "-writeFunctionAsClass(fn internal/domain.FunctionDef)": ""
+    "-writeTypeDef(td internal/domain.TypeDef)": ""
+    "-writeMethod(m internal/domain.MethodDef)": ""
+    "-writeField(f internal/domain.FieldDef)": ""
+    "-formatMethodSignature(m internal/domain.MethodDef)": "string"
+    "-formatParams(params []internal/domain.ParamDef)": "string"
+    "-formatReturns(returns []internal/domain.TypeRef)": "string"
+    "-filterDependencies(deps []internal/domain.Dependency, publicOnly bool, pkg internal/domain.PackageModel)": "[]internal/domain.Dependency"
+    "-writeDependency(dep internal/domain.Dependency)": ""
+    "-toD2Path(ref internal/domain.SymbolRef)": "string"
+    "-writeComment(text string)": ""
+    "-writeLine(line string)": ""
+    "-writeRaw(text string)": ""
+  }
+
+  fileGroup: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "-filename string": ""
+    "-interfaces []internal/domain.InterfaceDef": ""
+    "-structs []internal/domain.StructDef": ""
+    "-functions []internal/domain.FunctionDef": ""
+    "-typeDefs []internal/domain.TypeDef": ""
+  }
+
+  newD2TextBuilder: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "return": "*internal/adapter/d2.d2TextBuilder"
+  }
+
+
+}
+
+reader: {
+  label: "reader.go"
+  style.fill: "#f8f8f8"
+
+  Reader: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Read(ctx context.Context, paths []string)": "([]internal/domain.PackageModel, error)"
+  }
+
+  NewReader: {
+    shape: class
+    stereotype: "<<factory>>"
+
+    "return": "*internal/adapter/d2.Reader"
+  }
+
+
+}
+
+styles: {
+  label: "styles.go"
+  style.fill: "#f8f8f8"
+
+  symbolInfo: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "-stereotype internal/domain.Stereotype": ""
+  }
+
+  FileContainerColor: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "symbols": "[]internal/adapter/d2.symbolInfo"
+    "return": "string"
+  }
+
+  StereotypeColor: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "s": "internal/domain.Stereotype"
+    "return": "string"
+  }
+
+  StereotypeLabel: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "s": "internal/domain.Stereotype"
+    "return": "string"
+  }
+
+
+}
+
+templates: {
+  label: "templates.go"
+  style.fill: "#f8f8f8"
+
+  legendTemplate: {
+    shape: class
+    stereotype: "<<function>>"
+
+    "return": "string"
+  }
+
+
+}
+
+writer: {
+  label: "writer.go"
+  style.fill: "#f8f8f8"
+
+  Writer: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Write(ctx context.Context, model internal/domain.PackageModel, opts internal/domain.WriteOptions)": "error"
+  }
+
+  NewWriter: {
+    shape: class
+    stereotype: "<<factory>>"
+
+    "return": "*internal/adapter/d2.Writer"
+  }
+
+
+}
+
+# Dependencies
+builder.d2TextBuilder -> builder.fileGroup: "returns"
+builder.d2TextBuilder -> styles.symbolInfo: "returns"
+styles.FileContainerColor -> styles.symbolInfo: "uses"
+reader.NewReader -> reader.Reader: "returns"
+writer.NewWriter -> writer.Writer: "returns"
+builder.newD2TextBuilder -> builder.d2TextBuilder: "returns"
