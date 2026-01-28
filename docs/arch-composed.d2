@@ -85,7 +85,7 @@ internal.adapter.golang: {
 
 internal.domain: {
   label: "internal/domain"
-  class: domain
+  class: value
 
   Dependency: {
     shape: class
@@ -97,6 +97,19 @@ internal.domain: {
     "+ThroughExported bool": ""
 
     "+String()": "string"
+  }
+
+  SymbolRef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Package string": ""
+    "+File string": ""
+    "+Symbol string": ""
+    "+External bool": ""
+
+    "+String()": "string"
+    "+QualifiedName()": "string"
   }
 
   FieldDef: {
@@ -153,6 +166,31 @@ internal.domain: {
     "+SignatureWithVisibility()": "string"
   }
 
+  ParamDef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Type internal/domain.TypeRef": ""
+
+    "+String()": "string"
+  }
+
+  TypeRef: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Name string": ""
+    "+Package string": ""
+    "+IsPointer bool": ""
+    "+IsSlice bool": ""
+    "+IsMap bool": ""
+    "+KeyType *internal/domain.TypeRef": ""
+    "+ValueType *internal/domain.TypeRef": ""
+
+    "+String()": "string"
+  }
+
   Module: {
     shape: class
     stereotype: "<<struct>>"
@@ -184,16 +222,6 @@ internal.domain: {
     "+HasExportedSymbols()": "bool"
   }
 
-  ParamDef: {
-    shape: class
-    stereotype: "<<struct>>"
-
-    "+Name string": ""
-    "+Type internal/domain.TypeRef": ""
-
-    "+String()": "string"
-  }
-
   StructDef: {
     shape: class
     stereotype: "<<struct>>"
@@ -205,19 +233,6 @@ internal.domain: {
     "+SourceFile string": ""
     "+Doc string": ""
     "+Stereotype internal/domain.Stereotype": ""
-  }
-
-  SymbolRef: {
-    shape: class
-    stereotype: "<<struct>>"
-
-    "+Package string": ""
-    "+File string": ""
-    "+Symbol string": ""
-    "+External bool": ""
-
-    "+String()": "string"
-    "+QualifiedName()": "string"
   }
 
   TypeDef: {
@@ -233,21 +248,6 @@ internal.domain: {
     "+Stereotype internal/domain.Stereotype": ""
 
     "+IsEnum()": "bool"
-  }
-
-  TypeRef: {
-    shape: class
-    stereotype: "<<struct>>"
-
-    "+Name string": ""
-    "+Package string": ""
-    "+IsPointer bool": ""
-    "+IsSlice bool": ""
-    "+IsMap bool": ""
-    "+KeyType *internal/domain.TypeRef": ""
-    "+ValueType *internal/domain.TypeRef": ""
-
-    "+String()": "string"
   }
 
   WriteOptions: {
@@ -288,35 +288,6 @@ internal.domain: {
     "StereotypeValue": "const"
   }
 
-  # Dependencies
-  Dependency -> DependencyKind: "uses"
-  Dependency -> SymbolRef: "uses"
-  FieldDef -> TypeRef: "uses"
-  FunctionDef -> ParamDef: "uses"
-  FunctionDef -> Stereotype: "uses"
-  FunctionDef -> TypeRef: "uses"
-  InterfaceDef -> MethodDef: "uses"
-  InterfaceDef -> Stereotype: "uses"
-  MethodDef -> ParamDef: "uses"
-  MethodDef -> TypeRef: "uses"
-  Module -> PackageModel: "uses"
-  Module -> PackageModel: "returns"
-  PackageModel -> Dependency: "uses"
-  PackageModel -> FunctionDef: "returns"
-  PackageModel -> FunctionDef: "uses"
-  PackageModel -> InterfaceDef: "uses"
-  PackageModel -> InterfaceDef: "returns"
-  PackageModel -> StructDef: "returns"
-  PackageModel -> StructDef: "uses"
-  PackageModel -> TypeDef: "uses"
-  PackageModel -> TypeDef: "returns"
-  ParamDef -> TypeRef: "uses"
-  StructDef -> FieldDef: "uses"
-  StructDef -> MethodDef: "uses"
-  StructDef -> Stereotype: "uses"
-  TypeDef -> Stereotype: "uses"
-  TypeDef -> TypeRef: "uses"
-
 }
 
 internal.service: {
@@ -338,24 +309,6 @@ internal.service: {
     "+WriteCombined(ctx context.Context, models []internal/domain.PackageModel, outputPath string)": "error"
   }
 
-  GenerateCombinedOptions: {
-    shape: class
-    stereotype: "<<struct>>"
-
-    "+Paths []string": ""
-    "+OutputPath string": ""
-    "+Debug bool": ""
-    "+DebugPrintf func(format string, args ...any)": ""
-  }
-
-  GenerateCombinedResult: {
-    shape: class
-    stereotype: "<<struct>>"
-
-    "+OutputPath string": ""
-    "+PackageCount int": ""
-  }
-
   GenerateOptions: {
     shape: class
     stereotype: "<<struct>>"
@@ -364,6 +317,7 @@ internal.service: {
     "+PublicOnly bool": ""
     "+InternalOnly bool": ""
     "+Debug bool": ""
+
     "+DebugPrintf func(format string, args ...any)": ""
   }
 
@@ -375,6 +329,25 @@ internal.service: {
     "+PubFile string": ""
     "+InternalFile string": ""
     "+Error error": ""
+  }
+
+  GenerateCombinedOptions: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+Paths []string": ""
+    "+OutputPath string": ""
+    "+Debug bool": ""
+
+    "+DebugPrintf func(format string, args ...any)": ""
+  }
+
+  GenerateCombinedResult: {
+    shape: class
+    stereotype: "<<struct>>"
+
+    "+OutputPath string": ""
+    "+PackageCount int": ""
   }
 
   Service: {
@@ -422,24 +395,5 @@ internal.service: {
     "return": "*internal/service.Service"
   }
 
-  # Dependencies
-  NewService -> ModelReader: "uses"
-  NewService -> ModelWriter: "uses"
-  NewService -> Service: "returns"
-  Service -> GenerateCombinedOptions: "uses"
-  Service -> GenerateCombinedResult: "returns"
-  Service -> GenerateOptions: "uses"
-  Service -> GenerateResult: "returns"
-  Service -> SplitOptions: "uses"
-  Service -> SplitResult: "returns"
-  SplitResult -> SplitFileResult: "uses"
-
 }
 
-# Cross-package dependencies
-internal.adapter.d2.NewReader -> internal.service.ModelReader: "returns"
-internal.adapter.d2.NewWriter -> internal.service.ModelWriter: "returns"
-internal.adapter.golang.NewReader -> internal.service.ModelReader: "returns"
-internal.service.ModelReader -> internal.domain.PackageModel: "returns"
-internal.service.ModelWriter -> internal.domain.PackageModel: "uses"
-internal.service.ModelWriter -> internal.domain.WriteOptions: "uses"
