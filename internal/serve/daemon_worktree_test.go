@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -18,9 +19,18 @@ type fakeHTTPTransport struct {
 	boundAddr string
 
 	// observer, when non-nil, is the activity observer installed via
-	// SetActivityObserver. Exposed so idle-timeout tests can simulate
-	// HTTP traffic by calling it.
+	// SetActivityObserver. Guarded by mu so idle-timeout tests can
+	// safely read it from a separate goroutine under -race.
+	mu       sync.Mutex
 	observer func()
+}
+
+// getObserver returns the currently installed activity observer, if
+// any, under the lock. Used by tests to simulate HTTP traffic.
+func (f *fakeHTTPTransport) getObserver() func() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.observer
 }
 
 func (f *fakeHTTPTransport) Serve(ctx context.Context, addr string, ready func(boundAddr string)) error {
@@ -39,6 +49,8 @@ func (f *fakeHTTPTransport) Serve(ctx context.Context, addr string, ready func(b
 // SetActivityObserver implements ActivityAware so serve.Serve wires
 // the idle-timeout monitor to this fake when IdleTimeout > 0.
 func (f *fakeHTTPTransport) SetActivityObserver(fn func()) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.observer = fn
 }
 
@@ -180,10 +192,14 @@ func TestServe_IdleTimeoutResetsOnActivity(t *testing.T) {
 
 	// Wait for the fake transport to be wired (observer installed).
 	deadline := time.Now().Add(1 * time.Second)
-	for fake.observer == nil && time.Now().Before(deadline) {
+	var observer func()
+	for time.Now().Before(deadline) {
+		if observer = fake.getObserver(); observer != nil {
+			break
+		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	if fake.observer == nil {
+	if observer == nil {
 		t.Fatal("activity observer was never installed on the transport")
 	}
 
@@ -200,7 +216,7 @@ func TestServe_IdleTimeoutResetsOnActivity(t *testing.T) {
 			case <-deadline:
 				return
 			case <-ticker.C:
-				fake.observer()
+				observer()
 			}
 		}
 	}()
