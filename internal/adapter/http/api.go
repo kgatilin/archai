@@ -24,33 +24,37 @@ import (
 //
 // Read endpoints (GET):
 //
-//	GET  /api/packages                — list_packages
-//	GET  /api/packages/{path}         — get_package
-//	GET  /api/targets                 — list_targets
-//	GET  /api/diff?target=<id>        — diff (body returned as JSON)
-//	GET  /api/extract?path=a&path=b   — extract (filtered)
+//	GET  /api/mcp/packages            — list_packages
+//	GET  /api/mcp/packages/{path}     — get_package
+//	GET  /api/mcp/targets             — list_targets
+//	GET  /api/mcp/diff?target=<id>    — diff (body returned as JSON)
+//	GET  /api/mcp/extract?path=a&…    — extract (filtered)
 //
 // Write endpoints (POST, JSON body):
 //
-//	POST /api/targets/lock            — lock_target    ({id, description})
-//	POST /api/targets/current         — set_current_target ({id})
-//	POST /api/diff/apply              — apply_diff     ({patch_yaml, target})
-//	POST /api/validate                — validate       ({target})
+//	POST /api/mcp/targets/lock        — lock_target    ({id, description})
+//	POST /api/mcp/targets/current     — set_current_target ({id})
+//	POST /api/mcp/diff/apply          — apply_diff     ({patch_yaml, target})
+//	POST /api/mcp/validate            — validate       ({target})
 //
 // A single generic endpoint is also exposed for forward-compatibility:
 //
 //	POST /api/mcp/tools/call          — {name, arguments} → ToolResult
+//
+// All routes live under /api/mcp/ so they coexist with M8's
+// cytoscape-shaped /api/layers, /api/packages/<path>/graph and
+// /api/diff graph endpoints.
 func (s *Server) registerAPIRoutes(mux *nethttp.ServeMux) {
 	mux.HandleFunc("/api/mcp/tools/call", s.handleAPIToolsCall)
-	mux.HandleFunc("/api/extract", s.handleAPIExtract)
-	mux.HandleFunc("/api/packages", s.handleAPIPackages)
-	mux.HandleFunc("/api/packages/", s.handleAPIPackageGet)
-	mux.HandleFunc("/api/targets", s.handleAPITargets)
-	mux.HandleFunc("/api/targets/lock", s.handleAPITargetsLock)
-	mux.HandleFunc("/api/targets/current", s.handleAPITargetsCurrent)
-	mux.HandleFunc("/api/diff", s.handleAPIDiff)
-	mux.HandleFunc("/api/diff/apply", s.handleAPIDiffApply)
-	mux.HandleFunc("/api/validate", s.handleAPIValidate)
+	mux.HandleFunc("/api/mcp/extract", s.handleAPIExtract)
+	mux.HandleFunc("/api/mcp/packages", s.handleAPIPackages)
+	mux.HandleFunc("/api/mcp/packages/", s.handleAPIPackageGet)
+	mux.HandleFunc("/api/mcp/targets", s.handleAPITargets)
+	mux.HandleFunc("/api/mcp/targets/lock", s.handleAPITargetsLock)
+	mux.HandleFunc("/api/mcp/targets/current", s.handleAPITargetsCurrent)
+	mux.HandleFunc("/api/mcp/diff", s.handleAPIDiff)
+	mux.HandleFunc("/api/mcp/diff/apply", s.handleAPIDiffApply)
+	mux.HandleFunc("/api/mcp/validate", s.handleAPIValidate)
 }
 
 // writeAPIToolResult unwraps a ToolResult from mcp.Dispatch and writes
@@ -182,7 +186,7 @@ func (s *Server) handleAPIPackageGet(w nethttp.ResponseWriter, r *nethttp.Reques
 		nethttp.Error(w, "method not allowed", nethttp.StatusMethodNotAllowed)
 		return
 	}
-	const prefix = "/api/packages/"
+	const prefix = "/api/mcp/packages/"
 	if !strings.HasPrefix(r.URL.Path, prefix) {
 		nethttp.NotFound(w, r)
 		return

@@ -61,7 +61,7 @@ func mustWriteFile(t *testing.T, path, body string) {
 func TestAPI_ListPackages_ReturnsSummaries(t *testing.T) {
 	ts, _, _ := newAPITestServer(t)
 
-	resp, err := nethttp.Get(ts.URL + "/api/packages")
+	resp, err := nethttp.Get(ts.URL + "/api/mcp/packages")
 	if err != nil {
 		t.Fatalf("GET: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestAPI_ListPackages_ReturnsSummaries(t *testing.T) {
 func TestAPI_GetPackage_ReturnsPackageModel(t *testing.T) {
 	ts, _, _ := newAPITestServer(t)
 
-	resp, err := nethttp.Get(ts.URL + "/api/packages/beta")
+	resp, err := nethttp.Get(ts.URL + "/api/mcp/packages/beta")
 	if err != nil {
 		t.Fatalf("GET: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestAPI_GetPackage_ReturnsPackageModel(t *testing.T) {
 func TestAPI_GetPackage_Unknown_ReturnsError(t *testing.T) {
 	ts, _, _ := newAPITestServer(t)
 
-	resp, err := nethttp.Get(ts.URL + "/api/packages/nope")
+	resp, err := nethttp.Get(ts.URL + "/api/mcp/packages/nope")
 	if err != nil {
 		t.Fatalf("GET: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestAPI_GetPackage_Unknown_ReturnsError(t *testing.T) {
 func TestAPI_Extract_FilteredByPath(t *testing.T) {
 	ts, _, _ := newAPITestServer(t)
 
-	resp, err := nethttp.Get(ts.URL + "/api/extract?path=alpha")
+	resp, err := nethttp.Get(ts.URL + "/api/mcp/extract?path=alpha")
 	if err != nil {
 		t.Fatalf("GET: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestAPI_Extract_FilteredByPath(t *testing.T) {
 func TestAPI_ListTargets_Empty(t *testing.T) {
 	ts, _, _ := newAPITestServer(t)
 
-	resp, err := nethttp.Get(ts.URL + "/api/targets")
+	resp, err := nethttp.Get(ts.URL + "/api/mcp/targets")
 	if err != nil {
 		t.Fatalf("GET: %v", err)
 	}
@@ -167,9 +167,9 @@ func TestAPI_ListTargets_Empty(t *testing.T) {
 func TestAPI_TargetsLock_ThenCurrent_ThenValidate(t *testing.T) {
 	ts, state, root := newAPITestServer(t)
 
-	// 1. POST /api/targets/lock — freeze the current model as "base".
+	// 1. POST /api/mcp/targets/lock — freeze the current model as "base".
 	lockBody := bytes.NewBufferString(`{"id":"base","description":"test"}`)
-	resp, err := nethttp.Post(ts.URL+"/api/targets/lock", "application/json", lockBody)
+	resp, err := nethttp.Post(ts.URL+"/api/mcp/targets/lock", "application/json", lockBody)
 	if err != nil {
 		t.Fatalf("POST lock: %v", err)
 	}
@@ -179,9 +179,9 @@ func TestAPI_TargetsLock_ThenCurrent_ThenValidate(t *testing.T) {
 		t.Fatalf("lock status: %d body=%s", resp.StatusCode, body)
 	}
 
-	// 2. POST /api/targets/current — activate base.
+	// 2. POST /api/mcp/targets/current — activate base.
 	curBody := bytes.NewBufferString(`{"id":"base"}`)
-	resp2, err := nethttp.Post(ts.URL+"/api/targets/current", "application/json", curBody)
+	resp2, err := nethttp.Post(ts.URL+"/api/mcp/targets/current", "application/json", curBody)
 	if err != nil {
 		t.Fatalf("POST current: %v", err)
 	}
@@ -196,9 +196,9 @@ func TestAPI_TargetsLock_ThenCurrent_ThenValidate(t *testing.T) {
 		t.Errorf("state.CurrentTarget=%q, want base", state.Snapshot().CurrentTarget)
 	}
 
-	// 3. POST /api/validate (no body) — expect ok=true because code and
+	// 3. POST /api/mcp/validate (no body) — expect ok=true because code and
 	// target match (we locked right after loading).
-	resp3, err := nethttp.Post(ts.URL+"/api/validate", "application/json", strings.NewReader("{}"))
+	resp3, err := nethttp.Post(ts.URL+"/api/mcp/validate", "application/json", strings.NewReader("{}"))
 	if err != nil {
 		t.Fatalf("POST validate: %v", err)
 	}
@@ -227,7 +227,7 @@ func TestAPI_TargetsLock_ThenCurrent_ThenValidate(t *testing.T) {
 func TestAPI_Diff_NoCurrentTarget_ReturnsError(t *testing.T) {
 	ts, _, _ := newAPITestServer(t)
 
-	resp, err := nethttp.Get(ts.URL + "/api/diff")
+	resp, err := nethttp.Get(ts.URL + "/api/mcp/diff")
 	if err != nil {
 		t.Fatalf("GET: %v", err)
 	}
