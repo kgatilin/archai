@@ -44,9 +44,8 @@ type Options struct {
 	// mode: instead of a single State, the transport (typically the
 	// HTTP server constructed by HTTPServerFactory, which in this mode
 	// receives nil) manages one State per discovered worktree via
-	// MultiState. The watcher is still run against Root so changes in
-	// the host worktree refresh its model; per-worktree fsnotify is a
-	// future enhancement.
+	// MultiState. Per-worktree fsnotify watchers are installed lazily
+	// as each State is loaded (one watcher per loaded worktree).
 	MultiState *MultiState
 
 	// Debug enables verbose per-event logging.
@@ -111,6 +110,11 @@ func Serve(ctx context.Context, opts Options) error {
 		names := opts.MultiState.Names()
 		fmt.Fprintf(logOut, "serve: multi-worktree mode, %d worktree(s) discovered: %v\n",
 			len(names), names)
+		// Install a per-worktree fsnotify hook: each State gets its own
+		// watcher the first time it is loaded. The watchers are closed
+		// when Refresh drops a worktree or when the daemon shuts down.
+		opts.MultiState.SetWatcherHook(multiWatcherHook(ctx, opts.Debounce, logOut, opts.Debug))
+		defer func() { _ = opts.MultiState.Close() }()
 	}
 
 	// HTTP transport: start in a goroutine when both an address and a
@@ -220,8 +224,10 @@ func Serve(ctx context.Context, opts Options) error {
 			return watchErr
 		}
 	} else {
-		// Multi mode: no single-state watcher; block on ctx so HTTP
-		// stays alive until Ctrl-C.
+		// Multi mode: per-worktree watchers are spun up lazily as each
+		// State is loaded (see multiWatcherHook). We just block on ctx
+		// here so HTTP stays alive until Ctrl-C; the deferred
+		// MultiState.Close stops every registered watcher on exit.
 		fmt.Fprintln(logOut, "serve: multi-worktree mode (Ctrl-C to stop)")
 		<-ctx.Done()
 	}
@@ -235,6 +241,60 @@ func Serve(ctx context.Context, opts Options) error {
 	}
 
 	fmt.Fprintln(logOut, "serve: shutdown complete")
+	return nil
+}
+
+// multiWatcherHook returns a WatcherHook that installs one fsnotify
+// watcher per loaded worktree State, reusing buildHandler so the
+// event-dispatch logic matches single-mode exactly. The returned
+// io.Closer cancels the watcher goroutine and closes the underlying
+// fsnotify watcher; MultiState invokes it on Refresh-drop / Close.
+func multiWatcherHook(parent context.Context, debounce time.Duration, logOut io.Writer, debug bool) WatcherHook {
+	return func(_ context.Context, name string, state *State) (io.Closer, error) {
+		w, err := NewWatcher(state.Root(), debounce)
+		if err != nil {
+			return nil, err
+		}
+		childCtx, cancel := context.WithCancel(parent)
+		handler := buildHandler(childCtx, state, logOut, debug)
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			if rerr := w.Run(childCtx, handler); rerr != nil && !errors.Is(rerr, context.Canceled) {
+				fmt.Fprintf(logOut, "serve: watcher for %q: %v\n", name, rerr)
+			}
+		}()
+		if debug {
+			fmt.Fprintf(logOut, "serve: watcher started for worktree %q at %s\n", name, state.Root())
+		}
+		return &watcherCloser{cancel: cancel, watcher: w, done: done}, nil
+	}
+}
+
+// watcherCloser bundles the goroutine cancellation and the fsnotify
+// watcher's own Close so MultiState can release both with a single
+// io.Closer handle.
+type watcherCloser struct {
+	cancel  context.CancelFunc
+	watcher *Watcher
+	done    chan struct{}
+}
+
+// Close cancels the watcher goroutine, waits for it to unwind, and
+// closes the underlying fsnotify watcher. Idempotent.
+func (c *watcherCloser) Close() error {
+	if c == nil {
+		return nil
+	}
+	if c.cancel != nil {
+		c.cancel()
+	}
+	if c.done != nil {
+		<-c.done
+	}
+	if c.watcher != nil {
+		return c.watcher.Close()
+	}
 	return nil
 }
 
