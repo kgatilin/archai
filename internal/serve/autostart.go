@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/kgatilin/archai/internal/worktree"
@@ -41,7 +42,8 @@ type AutoStartOptions struct {
 	Root string
 
 	// HTTPAddr is the listen address passed to `archai serve --http`.
-	// Empty falls back to ":0" so the kernel picks a free port.
+	// Empty falls back to "127.0.0.1:0" so the kernel picks a free
+	// port and the auto-started daemon stays on the loopback interface.
 	HTTPAddr string
 
 	// WaitTimeout is the maximum time to wait for serve.json to appear
@@ -56,6 +58,11 @@ type AutoStartOptions struct {
 	// os.DevNull so the parent process (e.g. the MCP stdio wrapper)
 	// keeps stderr free of daemon noise.
 	Stderr io.Writer
+
+	// IdleTimeout, when non-zero, is passed as `--idle-timeout` to the
+	// spawned daemon so it exits after that long without HTTP traffic.
+	// Used by the MCP thin client to avoid leaking orphan daemons.
+	IdleTimeout time.Duration
 }
 
 // AutoStartDaemon spawns `archai serve --http <addr>` as a detached
@@ -64,6 +71,17 @@ type AutoStartOptions struct {
 // child is intentionally NOT attached to the parent's process group so
 // it survives when the MCP stdio wrapper exits — callers who want to
 // tear the daemon down should signal it by PID.
+//
+// A file lock at .arch/.worktree/<name>/autostart.lock serializes
+// concurrent callers. The sequence under the lock is:
+//
+//  1. re-check serve.json (another process may have won the race)
+//  2. if still no live daemon, spawn one
+//  3. poll for serve.json to confirm the child registered
+//
+// This prevents two simultaneous MCP clients in the same worktree from
+// spawning two daemons where the second overwrites the first's
+// serve.json and leaves the first daemon as an orphaned listener.
 func AutoStartDaemon(opts AutoStartOptions) (*worktree.ServeRecord, error) {
 	if opts.Root == "" {
 		return nil, fmt.Errorf("autostart: empty root")
@@ -79,7 +97,7 @@ func AutoStartDaemon(opts AutoStartOptions) (*worktree.ServeRecord, error) {
 	}
 	httpAddr := opts.HTTPAddr
 	if httpAddr == "" {
-		httpAddr = ":0"
+		httpAddr = "127.0.0.1:0"
 	}
 	waitTimeout := opts.WaitTimeout
 	if waitTimeout <= 0 {
@@ -90,7 +108,33 @@ func AutoStartDaemon(opts AutoStartOptions) (*worktree.ServeRecord, error) {
 		pollInterval = 50 * time.Millisecond
 	}
 
-	cmd := exec.Command(exePath, "serve", "--root", opts.Root, "--http", httpAddr)
+	name := worktree.Name(opts.Root)
+
+	// Acquire the per-worktree autostart lock so two MCP clients
+	// racing to auto-start don't both spawn a daemon. The lock file
+	// lives alongside serve.json under .arch/.worktree/<name>/.
+	lockDir := filepath.Join(opts.Root, ".arch", ".worktree", name)
+	if err := os.MkdirAll(lockDir, 0o755); err != nil {
+		return nil, fmt.Errorf("autostart: create %s: %w", lockDir, err)
+	}
+	lockPath := filepath.Join(lockDir, "autostart.lock")
+	unlock, err := acquireAutoStartLock(lockPath, waitTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("autostart: acquire lock: %w", err)
+	}
+	defer unlock()
+
+	// Re-check: another caller may have started a daemon while we
+	// were waiting for the lock.
+	if rec, rerr := worktree.ReadServe(opts.Root, name); rerr == nil && rec != nil && worktree.PIDAlive(rec.PID) {
+		return rec, nil
+	}
+
+	args := []string{"serve", "--root", opts.Root, "--http", httpAddr}
+	if opts.IdleTimeout > 0 {
+		args = append(args, "--idle-timeout", opts.IdleTimeout.String())
+	}
+	cmd := exec.Command(exePath, args...)
 	cmd.Stdin = nil
 	cmd.Stdout = io.Discard
 	if opts.Stderr != nil {
@@ -108,7 +152,6 @@ func AutoStartDaemon(opts AutoStartOptions) (*worktree.ServeRecord, error) {
 	childPID := cmd.Process.Pid
 	_ = cmd.Process.Release()
 
-	name := worktree.Name(opts.Root)
 	deadline := time.Now().Add(waitTimeout)
 	for time.Now().Before(deadline) {
 		rec, err := worktree.ReadServe(opts.Root, name)
