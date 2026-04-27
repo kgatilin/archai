@@ -327,6 +327,178 @@ func buildPackageOverviewGraph(pkg domain.PackageModel, allPkgs []domain.Package
 	return out
 }
 
+// --- Package dependency graph (#89) ---------------------------------
+
+// DepsMode constants control which edges buildPackageDepsGraph
+// emits. Values are the user-facing query-string tokens (?mode=...).
+const (
+	depsModeInbound  = "inbound"
+	depsModeOutbound = "outbound"
+	depsModeBoth     = "both"
+)
+
+// parseDepsMode coerces a query value into a known mode, defaulting to
+// "both" when empty/unknown so the UI always lands in the most useful
+// view.
+func parseDepsMode(s string) string {
+	switch s {
+	case depsModeInbound, depsModeOutbound, depsModeBoth:
+		return s
+	default:
+		return depsModeBoth
+	}
+}
+
+// buildPackageDepsGraph produces a project-only package dependency
+// graph for the Dependencies tab. The subject package is the root; all
+// other nodes are project packages it depends on (outbound) or that
+// depend on it (inbound). External / third-party deps are intentionally
+// excluded so the diagram stays focused on intra-module structure —
+// they're surfaced as a compact list elsewhere on the page.
+//
+// mode is one of "inbound", "outbound", "both" (default). In "both"
+// mode reciprocal pairs render as two distinct edges (inbound + outbound)
+// so the direction stays visually obvious.
+//
+// Output is fully deterministic: nodes are inserted in alphabetical
+// path order, duplicate edges are coalesced, and a stable iteration
+// over allPkgs (sorted) drives the inbound walk.
+func buildPackageDepsGraph(pkg domain.PackageModel, allPkgs []domain.PackageModel, mode string) graphPayload {
+	mode = parseDepsMode(mode)
+	out := graphPayload{
+		Meta: graphMeta{
+			View:   "package-deps",
+			Layout: "dagre",
+			Title:  pkg.Path,
+			Mode:   mode,
+		},
+	}
+
+	rootID := "pkg:" + pkg.Path
+	out.Nodes = append(out.Nodes, graphNode{
+		ID:    rootID,
+		Label: shortName(pkg.Path),
+		Kind:  "package",
+		Root:  true,
+	})
+
+	known := knownPackagePaths(allPkgs)
+	// Ensure the inbound scan is deterministic regardless of map order
+	// or upstream slice ordering.
+	sortedPkgs := append([]domain.PackageModel(nil), allPkgs...)
+	sort.Slice(sortedPkgs, func(i, j int) bool { return sortedPkgs[i].Path < sortedPkgs[j].Path })
+
+	// Outbound peers: project packages the subject directly depends on.
+	outboundPeers := make(map[string]struct{})
+	if mode == depsModeOutbound || mode == depsModeBoth {
+		for _, d := range pkg.Dependencies {
+			if d.To.External || d.To.Package == "" {
+				continue
+			}
+			if d.To.Package == pkg.Path {
+				continue
+			}
+			if _, ok := known[d.To.Package]; !ok {
+				continue
+			}
+			outboundPeers[d.To.Package] = struct{}{}
+		}
+	}
+
+	// Inbound peers: project packages that target the subject.
+	inboundPeers := make(map[string]struct{})
+	if mode == depsModeInbound || mode == depsModeBoth {
+		for _, src := range sortedPkgs {
+			if src.Path == pkg.Path {
+				continue
+			}
+			for _, d := range src.Dependencies {
+				if d.To.Package == pkg.Path {
+					inboundPeers[src.Path] = struct{}{}
+					break
+				}
+			}
+		}
+	}
+
+	// Emit peer nodes in deterministic alphabetical order. A peer that
+	// is both inbound and outbound only gets one node — the kind picks
+	// "package" (neutral) since both edges will render around it.
+	peerKinds := make(map[string]string)
+	for p := range outboundPeers {
+		peerKinds[p] = "package-out"
+	}
+	for p := range inboundPeers {
+		if _, ok := peerKinds[p]; ok {
+			peerKinds[p] = "package" // both
+		} else {
+			peerKinds[p] = "package-in"
+		}
+	}
+	peers := make([]string, 0, len(peerKinds))
+	for p := range peerKinds {
+		peers = append(peers, p)
+	}
+	sort.Strings(peers)
+	for _, p := range peers {
+		out.Nodes = append(out.Nodes, graphNode{
+			ID:    "pkg:" + p,
+			Label: shortName(p),
+			Kind:  peerKinds[p],
+		})
+	}
+
+	// Emit edges, deduplicated by (source,target,kind). Outbound first
+	// (subject → peer), then inbound (peer → subject), each block in
+	// alphabetical peer order for stable output.
+	type edgeKey struct{ src, tgt, kind string }
+	seenEdge := make(map[edgeKey]struct{})
+	addEdge := func(src, tgt, kind string) {
+		k := edgeKey{src, tgt, kind}
+		if _, dup := seenEdge[k]; dup {
+			return
+		}
+		seenEdge[k] = struct{}{}
+		out.Edges = append(out.Edges, graphEdge{Source: src, Target: tgt, Kind: kind})
+	}
+	if mode == depsModeOutbound || mode == depsModeBoth {
+		outs := make([]string, 0, len(outboundPeers))
+		for p := range outboundPeers {
+			outs = append(outs, p)
+		}
+		sort.Strings(outs)
+		for _, p := range outs {
+			addEdge(rootID, "pkg:"+p, "outbound")
+		}
+	}
+	if mode == depsModeInbound || mode == depsModeBoth {
+		ins := make([]string, 0, len(inboundPeers))
+		for p := range inboundPeers {
+			ins = append(ins, p)
+		}
+		sort.Strings(ins)
+		for _, p := range ins {
+			addEdge("pkg:"+p, rootID, "inbound")
+		}
+	}
+
+	return out
+}
+
+// externalDepCount counts unique external dependency packages of pkg.
+// Used by the Dependencies tab to surface an "N externals" hint next to
+// the project-only graph.
+func externalDepCount(pkg domain.PackageModel) int {
+	seen := make(map[string]struct{})
+	for _, d := range pkg.Dependencies {
+		if !d.To.External || d.To.Package == "" {
+			continue
+		}
+		seen[d.To.Package] = struct{}{}
+	}
+	return len(seen)
+}
+
 func interfaceOverviewLabel(iface domain.InterfaceDef, mode d2adapter.OverviewMode, currentPkg string, typeIndex map[string]map[string]string) string {
 	lines := []string{iface.Name, "interface"}
 	methods := visibleOverviewMethods(iface.Methods, mode)
@@ -655,18 +827,29 @@ func (s *Server) handleLayersGraphMiniJSON(w nethttp.ResponseWriter, r *nethttp.
 	writeJSON(w, buildLayerGraph(snap.Overlay, snap.Packages, true))
 }
 
-// handlePackageGraphJSON serves /api/packages/<path>/graph. The path
-// may contain slashes; the trailing "/graph" segment is mandatory so
-// this handler never collides with a list/detail endpoint later.
+// handlePackageGraphJSON serves /api/packages/<path>/graph and the
+// dedicated dependency-only variant /api/packages/<path>/deps/graph
+// (#89). The path may contain slashes; the trailing "/graph" or
+// "/deps/graph" segment is mandatory so this handler never collides
+// with a list/detail endpoint later.
 func (s *Server) handlePackageGraphJSON(w nethttp.ResponseWriter, r *nethttp.Request) {
 	const prefix = "/api/packages/"
 	rest := strings.TrimPrefix(r.URL.Path, prefix)
-	if !strings.HasSuffix(rest, "/graph") {
+
+	// Detect the deps variant first since "/deps/graph" also ends in
+	// "/graph"; ordering matters.
+	depsView := false
+	switch {
+	case strings.HasSuffix(rest, "/deps/graph"):
+		depsView = true
+		rest = strings.TrimSuffix(rest, "/deps/graph")
+	case strings.HasSuffix(rest, "/graph"):
+		rest = strings.TrimSuffix(rest, "/graph")
+	default:
 		nethttp.NotFound(w, r)
 		return
 	}
-	pkgPath := strings.TrimSuffix(rest, "/graph")
-	pkgPath = strings.Trim(pkgPath, "/")
+	pkgPath := strings.Trim(rest, "/")
 	if pkgPath == "" {
 		nethttp.NotFound(w, r)
 		return
@@ -676,6 +859,10 @@ func (s *Server) handlePackageGraphJSON(w nethttp.ResponseWriter, r *nethttp.Req
 	pkg, ok := findPackage(pkgs, pkgPath)
 	if !ok {
 		nethttp.NotFound(w, r)
+		return
+	}
+	if depsView {
+		writeJSON(w, buildPackageDepsGraph(pkg, pkgs, r.URL.Query().Get("mode")))
 		return
 	}
 	mode := d2adapter.ParseOverviewMode(r.URL.Query().Get("mode"))
