@@ -80,8 +80,8 @@ type packageTab struct {
 type pluginPanel struct {
 	TabID    string // e.g. "plugin:complexity"
 	Label    string
-	Element  string        // custom-element tag (validated)
-	ModelURL string        // data-model-url attribute value
+	Element  string // custom-element tag (validated)
+	ModelURL string // data-model-url attribute value
 	Active   bool
 	OpenTag  template.HTML // e.g. <plugin-x data-model-url="/api/plugins/x">
 	CloseTag template.HTML // e.g. </plugin-x>
@@ -231,6 +231,13 @@ type packageDetailData struct {
 	// shown.
 	Mode string
 
+	// Sequences are pre-computed call trees for the candidate entry
+	// points (constructors, exported methods, exported functions) of
+	// the package, rendered on the Overview tab when the active mode
+	// permits. Empty when no candidates were found.
+	Sequences    []sequenceEntry
+	HasSequences bool
+
 	// Public API / Internal
 	Interfaces []domain.InterfaceDef
 	Structs    []domain.StructDef
@@ -259,13 +266,17 @@ type packageDetailData struct {
 
 // buildPackageDetail constructs a view-model for the given package.
 // svgSource is the raw D2 diagram for the Overview tab; if rendering
-// failed the handler passes "" and an error string.
+// failed the handler passes "" and an error string. mode is the
+// overview-render mode ("public" or "full") and controls both the
+// graph payload reference and the candidate set for the per-entry
+// sequence trees rendered alongside the diagram.
 func buildPackageDetail(
 	active packageDetailTab,
 	pkg domain.PackageModel,
 	allPkgs []domain.PackageModel,
 	cfg *overlay.Config,
 	modulePath string,
+	mode string,
 ) *packageDetailData {
 	data := &packageDetailData{
 		Pkg:         pkg,
@@ -274,9 +285,13 @@ func buildPackageDetail(
 		Stereotypes: collectStereotypes(pkg),
 		LayerBadge:  pkg.Layer,
 		BCName:      findBCForPackage(pkg, cfg),
+		Mode:        mode,
 	}
 
 	switch active {
+	case tabOverview:
+		data.Sequences = buildPackageSequenceEntries(allPkgs, pkg, mode)
+		data.HasSequences = len(data.Sequences) > 0
 	case tabPublicAPI:
 		data.Interfaces = pkg.ExportedInterfaces()
 		data.Structs = pkg.ExportedStructs()
