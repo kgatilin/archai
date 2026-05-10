@@ -1,0 +1,11 @@
+io/archai/javaanalyzer/Analyzer.class
+io/archai/javaanalyzer/facts/JavaField.class
+io/archai/javaanalyzer/facts/JavaCall.class
+io/archai/javaanalyzer/facts/JavaClass.class
+io/archai/javaanalyzer/facts/JavaFacts.class
+io/archai/javaanalyzer/facts/JavaMethod.class
+io/archai/javaanalyzer/facts/JavaImport.class
+io/archai/javaanalyzer/json/Writer.class
+io/archai/javaanalyzer/facts/JavaParam.class
+io/archai/javaanalyzer/Main.class
+io/archai/javaanalyzer/facts/JavaAnnotation.class

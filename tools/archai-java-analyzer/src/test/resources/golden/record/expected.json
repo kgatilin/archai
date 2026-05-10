@@ -1,0 +1,30 @@
+{
+  "schema" : "javafacts/v1",
+  "packages" : [ "com.example.shapes" ],
+  "classes" : [ {
+    "fqn" : "com.example.shapes.Point",
+    "name" : "Point",
+    "kind" : "record",
+    "modifiers" : [ "public" ],
+    "permits" : [ ],
+    "doc" : null,
+    "fields" : [ {
+      "name" : "x",
+      "type" : "int",
+      "modifiers" : [ ]
+    }, {
+      "name" : "y",
+      "type" : "int",
+      "modifiers" : [ ]
+    } ],
+    "methods" : [ ],
+    "annotations" : [ ],
+    "package" : "com.example.shapes",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ ],
+    "source_file" : "Point.java"
+  } ],
+  "imports" : [ ],
+  "src_roots" : [ "src/test/resources/golden/record" ]
+}

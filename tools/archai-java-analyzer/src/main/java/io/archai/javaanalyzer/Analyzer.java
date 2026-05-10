@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -145,7 +146,9 @@ public final class Analyzer {
             }
         }
         JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combined);
-        StaticJavaParser.getParserConfiguration().setSymbolResolver(symbolSolver);
+        ParserConfiguration cfg = StaticJavaParser.getParserConfiguration();
+        cfg.setSymbolResolver(symbolSolver);
+        cfg.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
     }
 
     private List<Path> collectJavaFiles(Path root) throws IOException {

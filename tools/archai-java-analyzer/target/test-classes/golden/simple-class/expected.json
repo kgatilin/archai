@@ -1,0 +1,35 @@
+{
+  "schema" : "javafacts/v1",
+  "packages" : [ "com.example.simple" ],
+  "classes" : [ {
+    "fqn" : "com.example.simple.SimpleClass",
+    "name" : "SimpleClass",
+    "kind" : "class",
+    "modifiers" : [ "public" ],
+    "permits" : [ ],
+    "doc" : null,
+    "fields" : [ {
+      "name" : "counter",
+      "type" : "int",
+      "modifiers" : [ "private" ]
+    } ],
+    "methods" : [ {
+      "name" : "increment",
+      "modifiers" : [ "public" ],
+      "params" : [ ],
+      "returns" : "int",
+      "calls" : [ ],
+      "annotations" : [ ],
+      "type_parameters" : [ ],
+      "throws" : [ ]
+    } ],
+    "annotations" : [ ],
+    "package" : "com.example.simple",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ ],
+    "source_file" : "SimpleClass.java"
+  } ],
+  "imports" : [ ],
+  "src_roots" : [ "src/test/resources/golden/simple-class" ]
+}

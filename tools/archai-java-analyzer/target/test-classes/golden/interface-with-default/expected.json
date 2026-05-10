@@ -1,0 +1,47 @@
+{
+  "schema" : "javafacts/v1",
+  "packages" : [ "com.example.greet" ],
+  "classes" : [ {
+    "fqn" : "com.example.greet.Greeter",
+    "name" : "Greeter",
+    "kind" : "interface",
+    "modifiers" : [ "public" ],
+    "permits" : [ ],
+    "doc" : null,
+    "fields" : [ ],
+    "methods" : [ {
+      "name" : "greeting",
+      "modifiers" : [ ],
+      "params" : [ ],
+      "returns" : "String",
+      "calls" : [ ],
+      "annotations" : [ ],
+      "type_parameters" : [ ],
+      "throws" : [ ]
+    }, {
+      "name" : "hello",
+      "modifiers" : [ "default" ],
+      "params" : [ {
+        "name" : "name",
+        "type" : "String"
+      } ],
+      "returns" : "String",
+      "calls" : [ {
+        "to_class" : "com.example.greet.Greeter",
+        "to_method" : "greeting",
+        "static" : false
+      } ],
+      "annotations" : [ ],
+      "type_parameters" : [ ],
+      "throws" : [ ]
+    } ],
+    "annotations" : [ ],
+    "package" : "com.example.greet",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ ],
+    "source_file" : "Greeter.java"
+  } ],
+  "imports" : [ ],
+  "src_roots" : [ "src/test/resources/golden/interface-with-default" ]
+}

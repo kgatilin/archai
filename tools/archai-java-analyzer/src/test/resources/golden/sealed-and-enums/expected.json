@@ -1,0 +1,87 @@
+{
+  "schema" : "javafacts/v1",
+  "packages" : [ "com.example.sealed" ],
+  "classes" : [ {
+    "fqn" : "com.example.sealed.Circle",
+    "name" : "Circle",
+    "kind" : "record",
+    "modifiers" : [ "public" ],
+    "permits" : [ ],
+    "doc" : null,
+    "fields" : [ {
+      "name" : "radius",
+      "type" : "double",
+      "modifiers" : [ ]
+    } ],
+    "methods" : [ ],
+    "annotations" : [ ],
+    "package" : "com.example.sealed",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ "Shape" ],
+    "source_file" : "Circle.java"
+  }, {
+    "fqn" : "com.example.sealed.Color",
+    "name" : "Color",
+    "kind" : "enum",
+    "modifiers" : [ "public" ],
+    "permits" : [ ],
+    "doc" : null,
+    "fields" : [ {
+      "name" : "RED",
+      "type" : "Color",
+      "modifiers" : [ ]
+    }, {
+      "name" : "GREEN",
+      "type" : "Color",
+      "modifiers" : [ ]
+    }, {
+      "name" : "BLUE",
+      "type" : "Color",
+      "modifiers" : [ ]
+    } ],
+    "methods" : [ ],
+    "annotations" : [ ],
+    "package" : "com.example.sealed",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ ],
+    "source_file" : "Color.java"
+  }, {
+    "fqn" : "com.example.sealed.Shape",
+    "name" : "Shape",
+    "kind" : "interface",
+    "modifiers" : [ "public", "sealed" ],
+    "permits" : [ "Circle", "Square" ],
+    "doc" : null,
+    "fields" : [ ],
+    "methods" : [ ],
+    "annotations" : [ ],
+    "package" : "com.example.sealed",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ ],
+    "source_file" : "Shape.java"
+  }, {
+    "fqn" : "com.example.sealed.Square",
+    "name" : "Square",
+    "kind" : "record",
+    "modifiers" : [ "public" ],
+    "permits" : [ ],
+    "doc" : null,
+    "fields" : [ {
+      "name" : "side",
+      "type" : "double",
+      "modifiers" : [ ]
+    } ],
+    "methods" : [ ],
+    "annotations" : [ ],
+    "package" : "com.example.sealed",
+    "type_parameters" : [ ],
+    "extends" : null,
+    "implements" : [ "Shape" ],
+    "source_file" : "Square.java"
+  } ],
+  "imports" : [ ],
+  "src_roots" : [ "src/test/resources/golden/sealed-and-enums" ]
+}
