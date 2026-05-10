@@ -9,6 +9,11 @@ archai/
 ├── cmd/archai/           # CLI entry point (Cobra)
 │   └── main.go           # Wires dependencies, defines commands
 │
+├── tools/
+│   └── archai-java-analyzer/  # Java sub-project — JavaParser fat-jar emitting JavaFacts JSON.
+│                              # Built via `make build-java-analyzer` → dist/archai-java-analyzer.jar.
+│                              # Wired into Go via internal/adapter/java/ (see issue #102).
+│
 ├── internal/
 │   ├── domain/           # Core domain models (data containers)
 │   │   ├── package.go    # PackageModel - aggregate root

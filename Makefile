@@ -1,4 +1,4 @@
-.PHONY: build test clean install version archai-generate archai-baseline archai-check archai-smoke
+.PHONY: build test clean install version archai-generate archai-baseline archai-check archai-smoke build-java-analyzer
 
 # VERSION is stamped into the binary at build time via -ldflags. By
 # default it is derived from `git describe` so unreleased builds show
@@ -45,5 +45,10 @@ archai-smoke: build
 	$(ARCHAI) extract . --format json --out /tmp/archai-self-json
 	$(ARCHAI) sequence internal/service.Service.Generate --depth 3
 
+build-java-analyzer:
+	cd tools/archai-java-analyzer && mvn -B -ntp package
+	@mkdir -p dist
+	cp tools/archai-java-analyzer/target/archai-java-analyzer-*.jar dist/archai-java-analyzer.jar
+
 clean:
-	rm -rf bin/
+	rm -rf bin/ dist/
