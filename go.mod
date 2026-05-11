@@ -26,7 +26,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/pprof v0.0.0-20240927180334-d43a67379298 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/kgatilin/archmotif v0.0.0-00010101000000-000000000000
+	github.com/kgatilin/archmotif v0.26.0
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mazznoer/csscolorparser v0.1.5 // indirect
@@ -42,10 +42,3 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
-
-// Local replace until archmotif PR #54 (pkg/archmotifimport shim)
-// lands and a tag is cut. Reviewers must clone archmotif as a
-// sibling checkout (e.g. ../archmotif) and check out the
-// feat/53-pkg-import-shim branch. After upstream tag is published,
-// drop this replace and bump the require to the tagged version.
-replace github.com/kgatilin/archmotif => ../archmotif

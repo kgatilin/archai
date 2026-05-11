@@ -457,7 +457,7 @@ func resolveSymbolID(ref domain.SymbolRef, pkgByPath map[string]*domain.PackageM
 
 // --- ID helpers ----------------------------------------------------------
 
-func packageID(path string) string  { return "pkg:" + path }
+func packageID(path string) string   { return "pkg:" + path }
 func typeID(pkg, name string) string { return "type:" + pkg + "." + name }
 func functionID(pkg, name string) string {
 	return "fn:" + pkg + "." + name
