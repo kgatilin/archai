@@ -1,0 +1,2 @@
+[     449ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:65351/favicon.ico:0
+[     641ms] [INFO] [loadGraph] Loaded from /api/uigraph @ http://127.0.0.1:65351/review/assets/index-BKcwYZ03.js:64
