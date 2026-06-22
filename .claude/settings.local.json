@@ -2,10 +2,15 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Bash(go test ./...)"
+      "Bash(go test ./...)",
+      "mcp__archai__search",
+      "mcp__archai__search_graph"
     ],
     "deny": [],
     "ask": [],
     "defaultMode": "acceptEdits"
-  }
+  },
+  "enabledMcpjsonServers": [
+    "archai"
+  ]
 }
