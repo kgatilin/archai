@@ -1,4 +1,0 @@
-[    6513ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:63651/favicon.ico:0
-[   26594ms] [INFO] [loadGraph] Loaded from /w/UAGENT-694-session-graph-views/api/uigraph @ http://127.0.0.1:63651/w/UAGENT-694-session-graph-views/review/assets/index-BKcwYZ03.js:64
-[17193092ms] [INFO] [loadGraph] Loaded from /w/UAGENT-694-session-graph-views/api/uigraph @ http://127.0.0.1:63651/w/UAGENT-694-session-graph-views/review/assets/index-Cga9Nsca.js:64
-[17535724ms] [INFO] [loadGraph] Loaded from /w/UAGENT-694-session-graph-views/api/uigraph @ http://127.0.0.1:63651/w/UAGENT-694-session-graph-views/review/assets/index-BV62Uxny.js:64

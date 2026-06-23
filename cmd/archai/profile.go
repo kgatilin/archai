@@ -37,9 +37,9 @@ serialization.
 
 Examples:
   archai profile load
-  archai profile load /Users/kgatilin/work/uagent/code --repeat 3
-  archai profile load /Users/kgatilin/work/uagent/code --json
-  archai profile load /Users/kgatilin/work/uagent/code --cpuprofile /tmp/archai-load.pprof`,
+  archai profile load /path/to/project --repeat 3
+  archai profile load /path/to/project --json
+  archai profile load /path/to/project --cpuprofile /tmp/archai-load.pprof`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: runProfileLoad,
 	}
