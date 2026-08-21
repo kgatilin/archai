@@ -3,14 +3,14 @@
   "permissions": {
     "allow": [
       "Bash(go test ./...)",
-      "mcp__archai__search",
-      "mcp__archai__search_graph"
+      "mcp__wyrd__search",
+      "mcp__wyrd__search_graph"
     ],
     "deny": [],
     "ask": [],
     "defaultMode": "acceptEdits"
   },
   "enabledMcpjsonServers": [
-    "archai"
+    "wyrd"
   ]
 }
